@@ -9,17 +9,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['admin', 'phc_staff'])->default('phc_staff');
-            $table->foreignId('phc_id')->nullable()->constrained()->onDelete('cascade');
+            // Check if column doesn't exist before adding
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->enum('role', ['admin', 'phc_staff'])->default('phc_staff');
+            }
+            
+            if (!Schema::hasColumn('users', 'phc_id')) {
+                $table->foreignId('phc_id')->nullable()->constrained('phcs')->onDelete('cascade');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
             $table->dropForeign(['phc_id']);
-            $table->dropColumn('phc_id');
+            $table->dropColumn(['phc_id', 'role']);
         });
     }
 };
