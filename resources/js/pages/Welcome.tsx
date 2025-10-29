@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import React from 'react';
+import { login, register } from '@/routes';
 
 export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion }: any) {
     return (
@@ -10,7 +11,7 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                     {canLogin ? (
                         <div className="space-x-4">
                             <Link
-                                href={route('login')}
+                                href={login.url()}
                                 className="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:outline-red-500"
                             >
                                 Log in
@@ -18,7 +19,7 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
 
                             {canRegister && (
                                 <Link
-                                    href={route('register')}
+                                    href={register.url()}
                                     className="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:outline-red-500"
                                 >
                                     Register
@@ -42,6 +43,3 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
         </>
     );
 }
-
-// NOTE: You also need to import Head from '@inertiajs/react'
-import { Head } from '@inertiajs/react';
