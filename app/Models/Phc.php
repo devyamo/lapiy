@@ -4,23 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Phc extends Authenticatable
+class Phc extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'clinic_name',
-        'lga',
-        'ward',
-        'username',
-        'password',
+        'lga_id',
+        'ward_id',
         'is_active'
-    ];
-
-    protected $hidden = [
-        'password'
     ];
 
     public function patients()
@@ -33,11 +26,13 @@ class Phc extends Authenticatable
         return $this->hasMany(User::class);
     }
 
-    public function generateUniqueId($lga, $ward, $serialNumber)
+    public function lga()
     {
-        $lgaCode = strtoupper(substr($lga, 0, 3));
-        $wardCode = strtoupper(substr($ward, 0, 3));
-        
-        return $lgaCode . '/' . $wardCode . '/' . $serialNumber;
+        return $this->belongsTo(Lga::class);
+    }
+
+    public function ward()
+    {
+        return $this->belongsTo(Ward::class);
     }
 }

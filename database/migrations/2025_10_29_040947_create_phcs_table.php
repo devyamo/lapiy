@@ -11,10 +11,8 @@ return new class extends Migration
         Schema::create('phcs', function (Blueprint $table) {
             $table->id();
             $table->string('clinic_name');
-            $table->string('lga');
-            $table->string('ward');
-            $table->string('username')->unique();
-            $table->string('password');
+            $table->foreignId('lga_id')->constrained()->onDelete('cascade');
+            $table->foreignId('ward_id')->constrained()->onDelete('cascade');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

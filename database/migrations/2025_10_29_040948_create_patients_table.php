@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('husband_phone')->nullable();
             $table->string('community');
             $table->text('address');
-            $table->string('ward');
-            $table->string('lga');
+            $table->foreignId('ward_id')->constrained()->onDelete('cascade');
+            $table->foreignId('lga_id')->constrained()->onDelete('cascade');
             
             // Medical Information
             $table->integer('gravida')->nullable();

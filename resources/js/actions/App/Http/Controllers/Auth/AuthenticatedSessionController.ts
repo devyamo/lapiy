@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Auth\AuthenticatedSessionController::destroy
 * @see app/Http/Controllers/Auth/AuthenticatedSessionController.php:0
@@ -32,28 +32,6 @@ destroy.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: destroy.url(options),
     method: 'post',
 })
-
-/**
-* @see \App\Http\Controllers\Auth\AuthenticatedSessionController::destroy
-* @see app/Http/Controllers/Auth/AuthenticatedSessionController.php:0
-* @route '/logout'
-*/
-const destroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: destroy.url(options),
-    method: 'post',
-})
-
-/**
-* @see \App\Http\Controllers\Auth\AuthenticatedSessionController::destroy
-* @see app/Http/Controllers/Auth/AuthenticatedSessionController.php:0
-* @route '/logout'
-*/
-destroyForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: destroy.url(options),
-    method: 'post',
-})
-
-destroy.form = destroyForm
 
 const AuthenticatedSessionController = { destroy }
 

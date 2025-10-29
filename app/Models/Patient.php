@@ -11,8 +11,8 @@ class Patient extends Model
     use HasFactory;
 
     protected $fillable = [
-        'unique_id', 'phc_id', 'woman_name', 'age', 'literacy_status', 'phone_number',
-        'husband_name', 'husband_phone', 'community', 'address', 'ward', 'lga',
+        'unique_id', 'phc_id', 'ward_id', 'lga_id', 'woman_name', 'age', 'literacy_status', 'phone_number',
+        'husband_name', 'husband_phone', 'community', 'address',
         'gravida', 'parity', 'date_of_registration', 'edd', 'anc_visit_1', 'tracked_before_anc1',
         'anc_visit_2', 'tracked_before_anc2', 'anc_visit_3', 'tracked_before_anc3',
         'anc_visit_4', 'tracked_before_anc4', 'additional_anc', 'place_of_delivery',
@@ -39,18 +39,33 @@ class Patient extends Model
         return $this->belongsTo(Phc::class);
     }
 
+    public function lga()
+    {
+        return $this->belongsTo(Lga::class);
+    }
+
+    public function ward()
+    {
+        return $this->belongsTo(Ward::class);
+    }
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($patient) {
             // Generate unique ID: LGA code (3 letters) / Ward code (3 letters) / serial number
-            $lgaCode = strtoupper(substr($patient->lga, 0, 3));
-            $wardCode = strtoupper(substr($patient->ward, 0, 3));
-            $serial = Patient::where('lga', $patient->lga)
-                            ->where('ward', $patient->ward)
-                            ->count() + 1;
-            $patient->unique_id = $lgaCode . '/' . $wardCode . '/' . $serial;
+            $lga = Lga::find($patient->lga_id);
+            $ward = Ward::find($patient->ward_id);
+            
+            if ($lga && $ward) {
+                $lgaCode = strtoupper($lga->code);
+                $wardCode = strtoupper($ward->code);
+                $serial = Patient::where('lga_id', $patient->lga_id)
+                                ->where('ward_id', $patient->ward_id)
+                                ->count() + 1;
+                $patient->unique_id = $lgaCode . '/' . $wardCode . '/' . str_pad($serial, 3, '0', STR_PAD_LEFT);
+            }
         });
 
         static::saving(function ($patient) {

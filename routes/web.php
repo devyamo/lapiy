@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\PhcController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PatientController;
-use App\Http\Controllers\Settings\ProfileController; // FIX: Corrected import for ProfileController
-use App\Http\Controllers\Auth\AuthenticatedSessionController; // Import for Auth controllers
+use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -59,29 +61,21 @@ Route::middleware('auth')->group(function () {
 
     // --- Admin Routes ---
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Dashboard/Admin');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         
-        // Add PHC CRUD routes here (e.g., Route::resource('phcs', PhcController::class); )
+        Route::post('/phcs', [PhcController::class, 'store'])->name('phcs.store');
+        Route::delete('/phcs/{phc}', [PhcController::class, 'destroy'])->name('phcs.destroy');
+        Route::get('/lgas/{lga}/wards', [PhcController::class, 'getWardsByLga'])->name('lgas.wards');
     });
 
 
     // --- PHC Staff Routes ---
-    // Note: Staff are directed to a clean URL /dashboard, but the named route is phcstaff.dashboard
     Route::middleware('role:phc_staff')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Dashboard/PhcStaff');
-        })->name('phcstaff.dashboard');
+        Route::get('/phcstaff/dashboard', [DashboardController::class, 'index'])->name('phcstaff.dashboard');
         
-        // Patient routes (Full CRUD - adjusted to fit expected resource route structure)
-        Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
-        Route::get('/patients/create', function () {
-            return Inertia::render('Patients/Create');
-        })->name('patients.create');
-        Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');
-        Route::get('/patients/{patient}', [PatientController::class, 'show'])->name('patients.show');
-        Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('patients.update');
-        Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+        Route::resource('patients', PatientController::class);
+        
+        Route::get('/api/lgas', [PatientController::class, 'getLgas'])->name('api.lgas');
+        Route::get('/api/lgas/{lga}/wards', [PatientController::class, 'getWardsByLga'])->name('api.wards');
     });
 });
