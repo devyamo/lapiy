@@ -1,0 +1,63 @@
+Lafiyar Iyali Project (LIP): System Architecture & Development Blueprint (Laravel + React/Inertia)
+This document provides the complete technical specification for the backend (Laravel) and the frontend structure (React/Inertia) required to build the Maternal Health Tracking System.
+1. Technology Stack
+Backend: Laravel 11 (using the React Starter Kit setup)
+Frontend: React, TypeScript, Vite, Inertia.js, Chart.js
+Authentication: Laravel Breeze (Fortify backend + Inertia React frontend)
+Database: MySQL (or SQLite for initial setup)
+2. Database Schema Design (Normalized Structure)
+We need tables for geography, facilities, users, and patients.
+Table	Purpose	Key Fields
+users	Auth & Roles	role (ENUM: admin, phc_staff), phc_id (FK to phcs)
+lgas	Local Government Areas	name, code (3-letter abbreviation)
+wards	Wards within LGAs	lga_id (FK), name, code (3-letter abbreviation)
+phcs	Health Facilities	clinic_name, lga (name), ward (name) (Using names for simplicity in the flat creation required by admin)
+patients	Client Records	All 40+ fields from the Excel sheet, plus FKs (phc_id, lga_id, ward_id)
+Critical Migrations Summary (Review these names based on your latest creation):
+..._create_lgas_table.php & ..._create_wards_table.php: To store geographical reference data.
+..._create_phcs_table.php: To store clinic details. (Ensure this runs before the user table is modified).
+..._add_role_to_users_table.php: Modifies the default users table to include role and phc_id FK. (This failed previously due to ordering; running migrate:fresh with correctly ordered files should fix this).
+..._create_patients_table.php: The main data table, including FKs to phcs, lgas, and wards.
+3. Backend Logic (Laravel)
+The backend handles security, data processing, and the crucial Unique ID generation.
+A. Authentication & Authorization
+Breeze Setup: Use php artisan breeze:install react.
+Role Middleware: Implement a custom middleware (RoleMiddleware) registered in bootstrap/app.php to restrict routes based on User.role.
+B. Unique Patient ID Generation Logic
+The unique ID must be generated automatically upon patient creation using the selected LGA and Ward codes. This logic should reside in the Patient Model's creating event.
+Unique ID Format: LGA_CODE/WARD_CODE/SERIAL_NUMBER (e.g., IGA/RGS/001)
+Requirement for Logic: The system relies on the lgas and wards tables (which you seeded) to retrieve the 3-letter codes (IGA, RGS).
+Serial Number Logic: The serial number is determined by counting existing patients associated with the exact same lga_id and ward_id and adding one.
+C. Patient Model Automation
+The Patient Model must contain boot() methods to calculate the auto-fields from your spreadsheet requirements every time a record is saved (saving event):
+anc_visits_count
+anc4_completed
+pnc_completed
+post_edd_followup_status
+alert (Next Action)
+D. Key API Controllers (Admin Focus)
+Admin functionality is exposed via API endpoints, protected by the role:admin middleware.
+Admin PHC Creation (AdminController@createPhc):
+Accepts clinic_name, lga_id, ward_id, username (email), and password.
+Crucially: This function must create two records simultaneously:
+A record in the phcs table.
+A corresponding User record (role: phc_staff) linked to the new phc_id.
+Data Endpoints: Controllers are required for handling patient CRUD, dashboard statistics, and lookup data (LGAs/Wards).
+E. API Routes
+All API traffic should be defined in routes/api.php, protected by Sanctum.
+Admin Routes: Grouped under /api/admin and protected by the role:admin middleware.
+Staff Routes: Patient CRUD endpoints must scope results by the logged-in user's phc_id in the controller logic.
+6. Frontend Structure (React/Inertia)
+The frontend consumes the Laravel API. Since you are using the React Starter Kit with Inertia, routing is managed primarily via Laravel, which renders the correct React component (.tsx file).
+A. Routing and Access Control
+routes/web.php (Laravel): Defines top-level routes and uses the auth middleware. It redirects the user immediately upon login to either /admin/dashboard or /dashboard (staff route) based on the user's role.
+Component Rendering: Inertia renders the component (e.g., Dashboard/Admin or Dashboard/PhcStaff).
+B. Key Components to Build
+Admin Interface:
+PHC Management Page: A form/list interface for the Admin to execute the POST /api/admin/phcs endpoint to set up new clinics and staff accounts.
+System Dashboard: Components using Chart.js to visualize system-wide KPIs fetched from the /api/admin/dashboard/stats endpoint.
+PHC Staff Interface:
+Patient Registration Form: Must dynamically fetch available LGAs and Wards from the /api/lgas and /api/wards/:id endpoints to correctly populate dropdowns, ensuring the correct lga_id and ward_id are passed during patient creation so the Unique ID generation succeeds.
+Patient List: Displays all patients for that PHC, showing calculated fields like alert.
+Detail View: Allows staff to update specific fields (like ANC visit dates) which automatically triggers the recalculation of all auto-fields on the backend.
+This blueprint confirms that the structure designed previously (based on normalized tables, role-based access, and automated ID generation) is the correct and robust path forward within the Laravel ecosystem.
